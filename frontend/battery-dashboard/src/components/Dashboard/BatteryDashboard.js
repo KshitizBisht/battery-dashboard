@@ -1,112 +1,89 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DashboardHeader from './DashboardHeader';
 import BatteryMetrics from '../Metrics/BatteryMetrics';
 import './BatteryDashboard.css';
 import StateMonitor from '../State/StateMonitor';
-import axios from 'axios';
-
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 const BatteryDashboard = () => {
   const [batteryData, setBatteryData] = useState({
-    voltage: 402.3,
-    current: 142.6,
-    temperature: 34.2,
-    soc: 68,
-    soh: 92.3,
-    status: 'normal',
-    history: []
+    voltage: 0,
+    current: 0,
+    temperature: 0,
+    soc: 0,
+    soh: 0,
+    status: 'Connecting...'
   });
-  
-  const [alerts, setAlerts] = useState([]);
 
-  // Simulate real-time data updates
+  const [connectionStatus, setConnectionStatus] = useState('Connecting...');
+  const clientRef = useRef(null);
+
+
   useEffect(() => {
-    const fetchSoC = async () => {
-      try {
-        const response = await axios.get('http://localhost:8080/api/battery/soc', {
-          params: { carID: 'EV123' }
-        });
-        setBatteryData(prev => ({
-          ...prev,
-          soc: response.data.soc
-        }));
-      } catch (error) {
-        console.error('Error fetching SoC:', error);
+    const socket = new SockJS('http://localhost:8080/ws')
+    const stompClient = new Client({
+      webSocketFactory: () => socket,
+      reconnectDelay: 5000,
+      debug: (str) => {
+        console.log(str)
+      },
+      onConnect: () => {
+        console.log('Connected to Websocket')
+        stompClient.subscribe('/topic/raw-data', (response) => {
+          console.log('Received Message: ', response.body);
+          try {
+            const data = JSON.parse(response.body);
+            console.log('Received WebSocket data:', data);
+            setBatteryData(prev => ({
+              ...prev,
+              voltage: data.voltage,
+              current: data.current,
+              temperature: data.temperature,
+              soc: data.soc || prev.soc,
+              soh: data.soh || prev.soh
+            }));
+          } catch (error) {
+            console.error('Error parsing message:', error);
+          }
+        })
+      },
+      onStompError: (frame) => {
+        console.error('STOMP error:', frame.headers.message);
+        setConnectionStatus(`Error: ${frame.headers.message}`);
+      },
+      onWebSocketError: (event) => {
+        console.error('WebSocket error:', event);
+        setConnectionStatus('Connection error');
+      },
+      onDisconnect: () => {
+        setConnectionStatus('Disconnected');
+      }
+    })
+    stompClient.activate();
+    clientRef.current = stompClient;
+
+    return () => {
+      if (clientRef.current && clientRef.current.connected) {
+        clientRef.current.deactivate();
       }
     };
-
-    const fetchRange = async () => {
-      try {
-        const response = await axios.get('http://localhost:8080/api/battery/range', {
-          params: { carID: 'EV123' }
-        });
-        setBatteryData(prev => ({
-          ...prev,
-          voltage: response.data.voltage,
-          current: response.data.current
-        }));
-      } catch (error) {
-        console.error('Error fetching range data:', error);
-      }
-    };
-
-    const fetchTemperature = async () => {
-      try {
-        const response = await axios.get('http://localhost:8080/api/battery/temperature', {
-          params: { carID: 'EV123' }
-        });
-        setBatteryData(prev => ({
-          ...prev,
-          temperature: response.data.temperature
-        }));
-      } catch (error) {
-        console.error('Error fetching temperature:', error);
-      }
-    };
-
-    const fetchSOH = async () => {
-      try {
-        const response = await axios.get('http://localhost:8080/api/battery/soh', {
-          params: { carID: 'EV123' }
-        });
-        setBatteryData(prev => ({
-          ...prev,
-          soh: response.data.soh
-        }));
-      } catch (error) {
-        console.error('Error fetching SOH:', error);
-      }
-    };
-
-    // Initial fetch
-    fetchSoC();
-    //fetchRange();
-    //fetchTemperature();
-    //fetchSOH();
-
-    // Set interval to refresh data every 5 seconds
-    const interval = setInterval(() => {
-      fetchSoC();
-      fetchRange();
-      fetchTemperature();
-      //fetchSOH();
-    }, 5000);
-
-    return () => clearInterval(interval);
   }, []);
-
-
 
   return (
     <div className="battery-dashboard">
+      <div className="connection-status">
+        Status: {connectionStatus}
+      </div>
+
       <DashboardHeader />
       <StateMonitor
-            soc={batteryData.soc}
-            soh={batteryData.soh}
-          />
+        soc={batteryData.soc}
+        soh={batteryData.soh}
+      />
       <div className="dashboard-grid">
         <div className="metrics-section">
-          <BatteryMetrics 
+          <BatteryMetrics
             voltage={batteryData.voltage}
             current={batteryData.current}
             temperature={batteryData.temperature}

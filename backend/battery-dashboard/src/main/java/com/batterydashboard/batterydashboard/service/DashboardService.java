@@ -19,18 +19,20 @@ public class DashboardService {
     private final ObjectMapper objectMapper;
 
     public void sendRawData(String data) {
-        messagingTemplate.convertAndSend("topic/raw-data", data);
+        messagingTemplate.convertAndSend("/topic/raw-data", data);
     }
 
     public void sendSocPrediction(String data) throws JsonProcessingException {
         PredictionPayload requestPayload = objectMapper.readValue(data, PredictionPayload.class);
         ResponseEntity<String> response = flaskClient.getPredictedSoc(requestPayload);
-        messagingTemplate.convertAndSend("topic/predict-soc", data);
+        System.out.println(response.getBody());
+        messagingTemplate.convertAndSend("/topic/predict-soc", Objects.requireNonNull(response.getBody()));
     }
 
     public void sendSohPrediction(String data) throws JsonProcessingException {
         PredictionPayload requestPayload = objectMapper.readValue(data, PredictionPayload.class);
         ResponseEntity<String> response = flaskClient.getPredictedSoh(requestPayload);
-        messagingTemplate.convertAndSend("topic/predict-soh", Objects.requireNonNull(response.getBody()));
+        System.out.println(response.getBody());
+        messagingTemplate.convertAndSend("/topic/predict-soh", Objects.requireNonNull(response.getBody()));
     }
 }
