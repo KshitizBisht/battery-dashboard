@@ -9,5 +9,9 @@ def hello_world():
 def predict_soh():
    return jsonify({"soh":90})
 
+@app.route('/predict-soc', methods=['GET'])
+def predict_soh():
+   return jsonify({"soc":40})
+
 if __name__ == '__main__':
    app.run()
