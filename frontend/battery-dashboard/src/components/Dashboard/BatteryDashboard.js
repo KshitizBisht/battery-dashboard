@@ -3,6 +3,8 @@ import DashboardHeader from './DashboardHeader';
 import BatteryMetrics from '../Metrics/BatteryMetrics';
 import './BatteryDashboard.css';
 import StateMonitor from '../State/StateMonitor';
+import axios from 'axios';
+
 
 const BatteryDashboard = () => {
   const [batteryData, setBatteryData] = useState({
@@ -19,61 +21,81 @@ const BatteryDashboard = () => {
 
   // Simulate real-time data updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      const newVoltage = 400 + Math.random() * 20;
-      const newTemp = 30 + Math.random() * 10;
-      const newSOC = Math.max(0, Math.min(100, batteryData.soc - 0.1));
-      
-      const newData = {
-        voltage: parseFloat(newVoltage.toFixed(1)),
-        current: 140 + Math.random() * 20,
-        temperature: parseFloat(newTemp.toFixed(1)),
-        soc: parseFloat(newSOC.toFixed(1)),
-        soh: batteryData.soh - (Math.random() * 0.01),
-        status: newTemp > 45 ? 'warning' : 'normal',
-        timestamp: new Date().toISOString()
-      };
-      
-      // Check for alerts
-      if (newTemp > 45 && !alerts.some(a => a.type === 'temperature')) {
-        setAlerts([
-          ...alerts,
-          {
-            id: Date.now(),
-            type: 'temperature',
-            message: `High temperature: ${newTemp}°C`,
-            severity: 'high',
-            timestamp: new Date().toISOString()
-          }
-        ]);
+    const fetchSoC = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/battery/soc', {
+          params: { carID: 'EV123' }
+        });
+        setBatteryData(prev => ({
+          ...prev,
+          soc: response.data.soc
+        }));
+      } catch (error) {
+        console.error('Error fetching SoC:', error);
       }
-      
-      if (newVoltage < 380 && !alerts.some(a => a.type === 'voltage')) {
-        setAlerts([
-          ...alerts,
-          {
-            id: Date.now(),
-            type: 'voltage',
-            message: `Low voltage: ${newVoltage}V`,
-            severity: 'medium',
-            timestamp: new Date().toISOString()
-          }
-        ]);
-      }
-      
-      setBatteryData(prev => ({
-        ...newData,
-        history: [...prev.history.slice(-29), newData] // Keep last 30 data points
-      }));
-      
-    }, 2000); // Update every 2 seconds
-    
-    return () => clearInterval(interval);
-  }, [batteryData.soh, alerts]);
+    };
 
-  const dismissAlert = (id) => {
-    setAlerts(alerts.filter(alert => alert.id !== id));
-  };
+    const fetchRange = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/battery/range', {
+          params: { carID: 'EV123' }
+        });
+        setBatteryData(prev => ({
+          ...prev,
+          voltage: response.data.voltage,
+          current: response.data.current
+        }));
+      } catch (error) {
+        console.error('Error fetching range data:', error);
+      }
+    };
+
+    const fetchTemperature = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/battery/temperature', {
+          params: { carID: 'EV123' }
+        });
+        setBatteryData(prev => ({
+          ...prev,
+          temperature: response.data.temperature
+        }));
+      } catch (error) {
+        console.error('Error fetching temperature:', error);
+      }
+    };
+
+    const fetchSOH = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/battery/soh', {
+          params: { carID: 'EV123' }
+        });
+        setBatteryData(prev => ({
+          ...prev,
+          soh: response.data.soh
+        }));
+      } catch (error) {
+        console.error('Error fetching SOH:', error);
+      }
+    };
+
+    // Initial fetch
+    fetchSoC();
+    //fetchRange();
+    //fetchTemperature();
+    //fetchSOH();
+
+    // Set interval to refresh data every 5 seconds
+    const interval = setInterval(() => {
+      fetchSoC();
+      fetchRange();
+      fetchTemperature();
+      //fetchSOH();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+
 
   return (
     <div className="battery-dashboard">

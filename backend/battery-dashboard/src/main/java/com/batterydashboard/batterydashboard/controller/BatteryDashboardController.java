@@ -5,6 +5,7 @@ import com.batterydashboard.batterydashboard.service.BatteryRangeService;
 import com.batterydashboard.batterydashboard.service.BatterySoCService;
 import com.batterydashboard.batterydashboard.service.BatteryTemperatureService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,13 +13,21 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
+
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 public class BatteryDashboardController {
 
-
+  @Autowired
   public BatterySoCService batterySoCService;
+
+  @Autowired
   public BatteryHistoryService batteryHistoryService;
+
+  @Autowired
   public BatteryRangeService batteryRangeService;
+
+  @Autowired
   public BatteryTemperatureService batteryTemperatureService;
 
   @GetMapping("/api/battery/soc")
