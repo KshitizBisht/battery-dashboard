@@ -2,6 +2,7 @@ package com.batterydashboard.batterydashboard.service;
 
 import com.batterydashboard.batterydashboard.Flask.FlaskClient;
 import com.batterydashboard.batterydashboard.Flask.models.PredictionPayload;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,14 +22,14 @@ public class DashboardService {
         messagingTemplate.convertAndSend("topic/raw-data", data);
     }
 
-    public void sendSocPrediction(String data) {
-        PredictionPayload requestPayload = objectMapper.readTree(data, PredictionPayload.class);
+    public void sendSocPrediction(String data) throws JsonProcessingException {
+        PredictionPayload requestPayload = objectMapper.readValue(data, PredictionPayload.class);
         ResponseEntity<String> response = flaskClient.getPredictedSoc(requestPayload);
-        messagingTemplate.convertAndSend("topic/predict-soc", Objects.requireNonNull(response.getBody()));
+        messagingTemplate.convertAndSend("topic/predict-soc", data);
     }
 
-    public void sendSohPrediction(String data) {
-        PredictionPayload requestPayload = objectMapper.convertValue(data, PredictionPayload.class);
+    public void sendSohPrediction(String data) throws JsonProcessingException {
+        PredictionPayload requestPayload = objectMapper.readValue(data, PredictionPayload.class);
         ResponseEntity<String> response = flaskClient.getPredictedSoh(requestPayload);
         messagingTemplate.convertAndSend("topic/predict-soh", Objects.requireNonNull(response.getBody()));
     }

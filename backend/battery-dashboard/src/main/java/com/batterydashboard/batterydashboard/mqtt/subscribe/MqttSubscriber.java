@@ -1,6 +1,7 @@
 package com.batterydashboard.batterydashboard.mqtt.subscribe;
 
 import com.batterydashboard.batterydashboard.service.DashboardService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -55,8 +56,12 @@ public class MqttSubscriber {
             System.out.println("Payload: " + payload);
             System.out.println("Headers: " + message.getHeaders());
             dashboardService.sendRawData(payload);
-            dashboardService.sendSocPrediction(payload);
-            dashboardService.sendSohPrediction(payload);
+            try {
+                dashboardService.sendSocPrediction(payload);
+                dashboardService.sendSohPrediction(payload);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
         };
     }
 }
