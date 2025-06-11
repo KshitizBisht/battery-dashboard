@@ -1,5 +1,7 @@
 package com.batterydashboard.batterydashboard.mqtt.subscribe;
 
+import com.batterydashboard.batterydashboard.service.DashboardService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,10 +12,16 @@ import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannel
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.stereotype.Component;
 
 @Configuration
+@Component
+@RequiredArgsConstructor
 public class MqttSubscriberConfig {
 
+    private final SimpMessageSendingOperations template;
+    private final DashboardService dashboardService;
     private static final String CLIENT_ID = "spring-client-" + System.currentTimeMillis();
 
     @Value("${mqtt.topic.subscribe}")
@@ -33,6 +41,7 @@ public class MqttSubscriberConfig {
 
         adapter.setQos(1);
         adapter.setOutputChannel(mqttInputChannel());
+        adapter.addTopic("battery/B0006/data");
         return adapter;
     }
 
@@ -47,6 +56,8 @@ public class MqttSubscriberConfig {
             System.out.println("Topic: " + topic);
             System.out.println("Payload: " + payload);
             System.out.println("Headers: " + message.getHeaders());
+            dashboardService.sendRawData(payload);
+            dashboardService.sendPredictionData(payload);
         };
     }
 }
