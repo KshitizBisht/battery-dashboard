@@ -12,15 +12,13 @@ import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannel
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Component;
 
 @Configuration
 @Component
 @RequiredArgsConstructor
-public class MqttSubscriberConfig {
+public class MqttSubscriber {
 
-    private final SimpMessageSendingOperations template;
     private final DashboardService dashboardService;
     private static final String CLIENT_ID = "spring-client-" + System.currentTimeMillis();
 
@@ -57,7 +55,8 @@ public class MqttSubscriberConfig {
             System.out.println("Payload: " + payload);
             System.out.println("Headers: " + message.getHeaders());
             dashboardService.sendRawData(payload);
-            dashboardService.sendPredictionData(payload);
+            dashboardService.sendSocPrediction(payload);
+            dashboardService.sendSohPrediction(payload);
         };
     }
 }

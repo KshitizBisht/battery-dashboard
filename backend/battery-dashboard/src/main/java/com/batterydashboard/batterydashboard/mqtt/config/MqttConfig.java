@@ -1,4 +1,4 @@
-package com.batterydashboard.batterydashboard.mqtt.subscribe.config;
+package com.batterydashboard.batterydashboard.mqtt.config;
 
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.annotation.Value;
