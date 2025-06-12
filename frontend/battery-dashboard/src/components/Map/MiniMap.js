@@ -36,7 +36,7 @@ const MiniMap = ({ radius_metres = 5000 }) => {
 
             mapInstance.current = new google.maps.Map(mapRef.current, {
                 center: userLocation,
-                zoom: 4,
+                zoom: 5,
             });
 
             new google.maps.Marker({
