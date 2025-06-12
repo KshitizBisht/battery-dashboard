@@ -8,7 +8,7 @@ const BATTERY_FULLCHARGE_RANGE_MILES = 300;
 
 const BatteryIcon = ({ percentage, label, color }) => {
   const percentageValue = typeof percentage === 'number' ? percentage : 0;
-  
+
   return (
     <div className="battery-container">
       <div className="battery-label">{label}</div>
@@ -31,10 +31,10 @@ const BatteryIcon = ({ percentage, label, color }) => {
   );
 };
 
-const StateMonitor = ({vehicleId}) => {
+const StateMonitor = ({ vehicleId }) => {
   const [connectionStatus, setConnectionStatus] = useState('Connecting...');
-  const [soh, setSoh] = useState(0);  
-  const [soc, setSoc] = useState(100);  
+  const [soh, setSoh] = useState(0);
+  const [soc, setSoc] = useState(100);
   const [sohHistory, setSohHistory] = useState([]);
   const lastStoredTime = useRef(Date.now());
   const clientRef = useRef(null);
@@ -45,7 +45,7 @@ const StateMonitor = ({vehicleId}) => {
     setSoc(100);
     setSoh(0);
     setSohHistory([]);
-    
+
     if (socIntervalRef.current) {
       clearInterval(socIntervalRef.current);
     }
@@ -53,8 +53,8 @@ const StateMonitor = ({vehicleId}) => {
     socIntervalRef.current = setInterval(() => {
       setSoc(prevSoc => {
         const drivingCondition = Math.random();
-        let dischargeRate = 0.3; 
-        
+        let dischargeRate = 0.3;
+
         if (drivingCondition < 0.2) {
           dischargeRate = 0.7;
         } else if (drivingCondition < 0.4) {
@@ -64,13 +64,13 @@ const StateMonitor = ({vehicleId}) => {
         } else if (drivingCondition < 0.8) {
           dischargeRate = 0.35;
         }
-        
-        dischargeRate += (Math.random() * 0.1 - 0.5);
+
+        dischargeRate += (Math.random() * 0.2);
 
         return Math.max(0, prevSoc - dischargeRate);
       });
     }, 1000);
-    
+
     return () => {
       if (socIntervalRef.current) {
         clearInterval(socIntervalRef.current);
@@ -131,12 +131,12 @@ const StateMonitor = ({vehicleId}) => {
       }
     };
   }, [vehicleId, vehicleTopic]);
-  
+
   const socColor = soc < 20 ? '#e74c3c' :
-                  soc < 40 ? '#f39c12' : '#2ecc71';
-                  
-  const sohColor = soh < 80 ? '#e74c3c' : 
-                   soh < 90 ? '#f39c12' : '#3498db';
+    soc < 40 ? '#f39c12' : '#2ecc71';
+
+  const sohColor = soh < 80 ? '#e74c3c' :
+    soh < 90 ? '#f39c12' : '#3498db';
 
   return (
     <div className="state-monitor">
@@ -154,8 +154,8 @@ const StateMonitor = ({vehicleId}) => {
           <div className="status-label">SOC Status:</div>
           <div className="status-value">
             {soc < 20 ? "CRITICAL - Needs charging" :
-             soc < 40 ? "LOW - Charge soon" : 
-             "NORMAL - Sufficient charge"}
+              soc < 40 ? "LOW - Charge soon" :
+                "NORMAL - Sufficient charge"}
           </div>
         </div>
 
@@ -163,8 +163,8 @@ const StateMonitor = ({vehicleId}) => {
           <div className="status-label">SOH Status:</div>
           <div className="status-value">
             {soh < 80 ? "POOR - Consider replacement" :
-             soh < 90 ? "FAIR - Monitor degradation" : 
-             "GOOD - Healthy battery"}
+              soh < 90 ? "FAIR - Monitor degradation" :
+                "GOOD - Healthy battery"}
           </div>
         </div>
       </div>

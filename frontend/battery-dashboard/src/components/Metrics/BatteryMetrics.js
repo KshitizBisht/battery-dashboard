@@ -21,7 +21,7 @@ const BatteryMetrics = ({ voltage, current, temperature}) => {
         <div className="metric-card">
           <div className="metric-label">Current</div>
           <FontAwesomeIcon icon={faBolt} className="metric-icon" />
-          <div className="metric-value">{current.toFixed(1)} <span className="metric-unit">A</span></div>
+          <div className="metric-value">{current.toFixed(2)} <span className="metric-unit">A</span></div>
           <div className="metric-status normal">Normal</div>
         </div>
         
