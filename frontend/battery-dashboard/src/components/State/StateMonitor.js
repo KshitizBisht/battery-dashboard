@@ -46,12 +46,10 @@ const StateMonitor = ({vehicleId}) => {
     setSoh(0);
     setSohHistory([]);
     
-    // Clear any existing SOC simulation
     if (socIntervalRef.current) {
       clearInterval(socIntervalRef.current);
     }
-    
-    // Start new simulation
+
     socIntervalRef.current = setInterval(() => {
       setSoc(prevSoc => {
         const drivingCondition = Math.random();
@@ -67,7 +65,7 @@ const StateMonitor = ({vehicleId}) => {
           dischargeRate = 0.35;
         }
         
-        dischargeRate += (Math.random() * 0.1 - 0.05);
+        dischargeRate += (Math.random() * 0.1 - 0.5);
 
         return Math.max(0, prevSoc - dischargeRate);
       });

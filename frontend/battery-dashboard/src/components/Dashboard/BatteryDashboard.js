@@ -5,7 +5,6 @@ import './BatteryDashboard.css';
 import StateMonitor from '../State/StateMonitor';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import PredictSoh from '../Metrics/Predictsoh';
 
 const BatteryDashboard = () => {
   const [batteryData, setBatteryData] = useState({
@@ -20,12 +19,10 @@ const BatteryDashboard = () => {
   const [selectedVehicle, setSelectedVehicle] = useState('JLR-EV-B0005');
   const clientRef = useRef(null);
 
-  // Handle vehicle change from header
   const handleVehicleChange = (vehicleId) => {
     setSelectedVehicle(vehicleId);
     setConnectionStatus('Switching vehicles...');
     
-    // Clear current data
     setBatteryData({
       voltage: 0,
       current: 0,
@@ -33,14 +30,12 @@ const BatteryDashboard = () => {
       soc: 0,
       status: 'Loading...'
     });
-    
-    // Disconnect existing WebSocket if connected
+
     if (clientRef.current && clientRef.current.connected) {
       clientRef.current.deactivate();
     }
   };
 
-  // WebSocket connection
   useEffect(() => {
     if (!selectedVehicle) return;
     
@@ -64,7 +59,7 @@ const BatteryDashboard = () => {
               voltage: data.voltage,
               current: data.current,
               temperature: data.temperature,
-              soc: data.soc,  // Update SOC here
+              soc: data.soc, 
               status: 'Connected'
             }));
             

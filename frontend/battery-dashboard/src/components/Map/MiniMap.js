@@ -18,7 +18,7 @@ const MiniMap = ({ radius_metres = 5000 }) => {
             },
             (error) => {
                 console.error('Error getting location:', error);
-                setUserLocation({ lat: 36.171204557100324,  lng: -115.1391938386745 }); // fallback: Las Vegas
+                setUserLocation({ lat: 36.171204557100324,  lng: -115.1391938386745 });
             }
         );
     }, []);
@@ -54,9 +54,9 @@ const MiniMap = ({ radius_metres = 5000 }) => {
 
         const maxRange = radius_metres;
         const targetRadii = [
-            radius_metres,           // red
-            radius_metres * 0.85,    // orange
-            radius_metres * 0.7      // green
+            radius_metres,          
+            radius_metres * 0.85,   
+            radius_metres * 0.7      
         ];
 
         const duration = 500;
@@ -116,7 +116,7 @@ const MiniMap = ({ radius_metres = 5000 }) => {
             },
         ];
 
-        // Clear old circles
+
         rangeCirclesRef.current.forEach(circle => circle.setMap(null));
         rangeCirclesRef.current = [];
 
