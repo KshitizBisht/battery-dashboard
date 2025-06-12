@@ -3,11 +3,10 @@ import { Loader } from '@googlemaps/js-api-loader';
 import './MiniMap.css';
 
 const MiniMap = ({ radius_metres = 5000 }) => {
-    console.log("radius: " + radius_metres)
     const mapRef = useRef(null);
     const [userLocation, setUserLocation] = useState(null);
     const mapInstance = useRef(null);
-    const circleRef = useRef(null);
+    const rangeCirclesRef = useRef([]);
 
     useEffect(() => {
         navigator.geolocation.getCurrentPosition(
@@ -19,7 +18,7 @@ const MiniMap = ({ radius_metres = 5000 }) => {
             },
             (error) => {
                 console.error('Error getting location:', error);
-                setUserLocation({ lat: 51.5033, lng: -0.1196 }); // fallback: London
+                setUserLocation({ lat: 36.171204557100324,  lng: -115.1391938386745 }); // fallback: Las Vegas
             }
         );
     }, []);
@@ -37,7 +36,7 @@ const MiniMap = ({ radius_metres = 5000 }) => {
 
             mapInstance.current = new google.maps.Map(mapRef.current, {
                 center: userLocation,
-                zoom: 10,
+                zoom: 4,
             });
 
             new google.maps.Marker({
@@ -46,46 +45,42 @@ const MiniMap = ({ radius_metres = 5000 }) => {
                 title: 'You are here',
             });
 
-            circleRef.current = new google.maps.Circle({
-                strokeColor: '#007BFF',
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
-                fillColor: '#007BFF',
-                fillOpacity: 0.2,
-                map: mapInstance.current,
-                center: userLocation,
-                radius: radius_metres,
-            });
-
             drawRangeCircles(mapInstance.current, userLocation, radius_metres);
         });
     }, [userLocation]);
 
-    // Update radius when prop changes
     useEffect(() => {
-        if (!circleRef.current) return;
+        if (!rangeCirclesRef.current.length) return;
 
-        const circle = circleRef.current;
-        const startRadius = circle.getRadius();
-        const endRadius = radius_metres;
-        const duration = 500; // animation duration in ms
+        const maxRange = radius_metres;
+        const targetRadii = [
+            radius_metres,           // red
+            radius_metres * 0.85,    // orange
+            radius_metres * 0.7      // green
+        ];
+
+        const duration = 500;
         const frameRate = 60;
         const totalFrames = Math.round((duration / 1000) * frameRate);
         let frame = 0;
 
+        const easeInOutQuad = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
+        const startRadii = rangeCirclesRef.current.map(circle => circle.getRadius());
+
         const animate = () => {
             frame++;
             const progress = frame / totalFrames;
-            const currentRadius = startRadius + (endRadius - startRadius) * easeInOutQuad(progress);
-            circle.setRadius(currentRadius);
+
+            rangeCirclesRef.current.forEach((circle, index) => {
+                const start = startRadii[index];
+                const end = targetRadii[index];
+                const current = start + (end - start) * easeInOutQuad(progress);
+                circle.setRadius(current);
+            });
 
             if (frame < totalFrames) {
                 requestAnimationFrame(animate);
             }
-        };
-
-        const easeInOutQuad = (t) => {
-            return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
         };
 
         animate();
@@ -95,16 +90,17 @@ const MiniMap = ({ radius_metres = 5000 }) => {
         const google = window.google;
 
         const maxRange = radius_metres;
-        const redRadius = maxRange * 0.3;
-        const orangeRadius = maxRange * 0.6;
-        const greenRadius = maxRange;
+        const redRadius = maxRange;
+        const orangeRadius = maxRange * 0.85;
+        const greenRadius = maxRange * 0.7;
+
 
         const circleOptions = [
             {
                 radius: redRadius,
                 fillColor: '#e74c3c',
                 strokeColor: '#e74c3c',
-                zIndex: 3,
+                zIndex: 1,
             },
             {
                 radius: orangeRadius,
@@ -116,12 +112,16 @@ const MiniMap = ({ radius_metres = 5000 }) => {
                 radius: greenRadius,
                 fillColor: '#2ecc71',
                 strokeColor: '#2ecc71',
-                zIndex: 1,
+                zIndex: 3,
             },
         ];
 
+        // Clear old circles
+        rangeCirclesRef.current.forEach(circle => circle.setMap(null));
+        rangeCirclesRef.current = [];
+
         circleOptions.forEach(({ radius, fillColor, strokeColor, zIndex }) => {
-            new google.maps.Circle({
+            const circle = new google.maps.Circle({
                 strokeColor,
                 strokeOpacity: 0.6,
                 strokeWeight: 1,
@@ -129,13 +129,13 @@ const MiniMap = ({ radius_metres = 5000 }) => {
                 fillOpacity: 0.2,
                 map,
                 center,
-                radius, // ✅ Correct key
+                radius,
                 zIndex,
             });
+
+            rangeCirclesRef.current.push(circle);
         });
     };
-
-
 
     return <div ref={mapRef} className="map-container" />;
 };
