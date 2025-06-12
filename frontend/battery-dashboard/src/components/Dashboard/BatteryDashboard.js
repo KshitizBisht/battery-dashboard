@@ -68,9 +68,6 @@ const BatteryDashboard = () => {
 
   return (
     <div className="battery-dashboard">
-      <div className="connection-status">
-        Status: {connectionStatus}
-      </div>
 
       <DashboardHeader />
       <StateMonitor/>
