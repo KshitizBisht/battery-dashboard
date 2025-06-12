@@ -18,7 +18,7 @@ const MiniMap = ({ radius_metres = 5000 }) => {
             },
             (error) => {
                 console.error('Error getting location:', error);
-                setUserLocation({ lat: 36.171204557100324,  lng: -115.1391938386745 });
+                setUserLocation({ lat: 36.171204557100324, lng: -115.1391938386745 });
             }
         );
     }, []);
@@ -54,9 +54,9 @@ const MiniMap = ({ radius_metres = 5000 }) => {
 
         const maxRange = radius_metres;
         const targetRadii = [
-            radius_metres,          
-            radius_metres * 0.85,   
-            radius_metres * 0.7      
+            radius_metres,
+            radius_metres * 0.85,
+            radius_metres * 0.7
         ];
 
         const duration = 500;

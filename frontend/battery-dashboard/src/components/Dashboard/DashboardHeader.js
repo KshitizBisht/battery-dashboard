@@ -4,7 +4,7 @@ import './DashboardHeader.css';
 const DashboardHeader = ({ onVehicleChange }) => {
   const [selectedVehicle, setSelectedVehicle] = useState('JLR-EV-001');
   const userProfile = "ADMIN"
-  
+
   const vehicleOptions = [
     { id: 'JLR-EV-B0005', name: 'Jaguar I-PACE 2023' },
     { id: 'JLR-EV-B0006', name: 'Range Rover EV 2024' },
@@ -31,8 +31,8 @@ const DashboardHeader = ({ onVehicleChange }) => {
           <div className="selection-group">
             <div className="selection-item">
               <label htmlFor="vehicle-select" className="selection-label">Vehicle:</label>
-              <select 
-                id="vehicle-select" 
+              <select
+                id="vehicle-select"
                 className="selection-dropdown"
                 value={selectedVehicle}
                 onChange={handleVehicleChange}
@@ -45,12 +45,12 @@ const DashboardHeader = ({ onVehicleChange }) => {
               </select>
             </div>
           </div>
-          
+
           <div className="status-indicator">
             <span className="status-dot active"></span>
             <span>Connected</span>
           </div>
-          
+
           <div className="user-info">
             <div className="avatar">TS</div>
             <div className="user-details">

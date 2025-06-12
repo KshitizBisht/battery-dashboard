@@ -2,12 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-const displaytext = ({predict}) => {
-    return (
-        <div>
-            {predict}
-        </div>
-    )
+const displaytext = ({ predict }) => {
+  return (
+    <div>
+      {predict}
+    </div>
+  )
 }
 const Predictsoh = () => {
   const [connectionStatus, setConnectionStatus] = useState('Connecting...');
@@ -63,8 +63,8 @@ const Predictsoh = () => {
   }, []);
 
   return (
-    <displaytext 
-    predict={predictData.soh_future}
+    <displaytext
+      predict={predictData.soh_future}
     />
   );
 };

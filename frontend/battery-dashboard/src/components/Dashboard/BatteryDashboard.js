@@ -22,7 +22,7 @@ const BatteryDashboard = () => {
   const handleVehicleChange = (vehicleId) => {
     setSelectedVehicle(vehicleId);
     setConnectionStatus('Switching vehicles...');
-    
+
     setBatteryData({
       voltage: 0,
       current: 0,
@@ -38,7 +38,7 @@ const BatteryDashboard = () => {
 
   useEffect(() => {
     if (!selectedVehicle) return;
-    
+
     const socket = new SockJS('http://localhost:8080/ws');
     const stompClient = new Client({
       webSocketFactory: () => socket,
@@ -50,7 +50,7 @@ const BatteryDashboard = () => {
         const vehicleTopic = selectedVehicle.split('-')[2];
         const topic = `/topic/${vehicleTopic}/raw-data`;
         console.log(`Subscribing to topic: ${topic}`);
-        
+
         stompClient.subscribe(topic, (response) => {
           try {
             const data = JSON.parse(response.body);
@@ -59,10 +59,10 @@ const BatteryDashboard = () => {
               voltage: data.voltage,
               current: data.current,
               temperature: data.temperature,
-              soc: data.soc, 
+              soc: data.soc,
               status: 'Connected'
             }));
-            
+
           } catch (error) {
             console.error('Error parsing message:', error);
           }
@@ -80,7 +80,7 @@ const BatteryDashboard = () => {
         setConnectionStatus('Disconnected');
       }
     });
-    
+
     stompClient.activate();
     clientRef.current = stompClient;
 
@@ -89,20 +89,20 @@ const BatteryDashboard = () => {
         clientRef.current.deactivate();
       }
     };
-  }, [selectedVehicle]); 
+  }, [selectedVehicle]);
 
   return (
     <div className="battery-dashboard">
       <DashboardHeader onVehicleChange={handleVehicleChange} />
-      
+
       <div className="vehicle-indicator">
         <span className="vehicle-badge">Active Vehicle:</span>
         <span className="vehicle-id">{selectedVehicle}</span>
         <span className="connection-status">Status: {connectionStatus}</span>
       </div>
-      
+
       <StateMonitor vehicleId={selectedVehicle} soc={batteryData.soc} />
-      
+
       <div className="dashboard-grid">
         <div className="metrics-section">
           <BatteryMetrics

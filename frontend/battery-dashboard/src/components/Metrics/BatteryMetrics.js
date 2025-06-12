@@ -2,11 +2,11 @@ import './BatteryMetrics.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBolt, faThermometerHalf, faChargingStation } from '@fortawesome/free-solid-svg-icons';
 
-const BatteryMetrics = ({ voltage, current, temperature}) => {
+const BatteryMetrics = ({ voltage, current, temperature }) => {
   return (
     <div className="metrics-container">
       <div className="section-title">Battery Metrics</div>
-      
+
       <div className="metrics-grid">
         <div className="metric-card">
           <div className="metric-label">Voltage</div>
@@ -16,14 +16,14 @@ const BatteryMetrics = ({ voltage, current, temperature}) => {
             {voltage < 380 ? 'Low' : 'Normal'}
           </div>
         </div>
-        
+
         <div className="metric-card">
           <div className="metric-label">Current</div>
           <FontAwesomeIcon icon={faBolt} className="metric-icon" />
           <div className="metric-value">{current.toFixed(2)} <span className="metric-unit">A</span></div>
           <div className="metric-status normal">Normal</div>
         </div>
-        
+
         <div className="metric-card">
           <div className="metric-label">Temperature</div>
           <FontAwesomeIcon icon={faThermometerHalf} className="metric-icon" />

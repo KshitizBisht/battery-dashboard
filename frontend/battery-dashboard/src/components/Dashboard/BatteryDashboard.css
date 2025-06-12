@@ -110,6 +110,7 @@
   font-size: 14px;
   color: #27ae60;
   font-weight: 500;
+  padding: 5%;
 }
 
 .connection-status.error {

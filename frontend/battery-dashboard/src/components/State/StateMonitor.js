@@ -14,7 +14,11 @@ const BatteryIcon = ({ percentage, label, color }) => {
 
   return (
     <div className="battery-container">
-      <div className="battery-label"><p>{label}</p></div>
+      <div className="battery-label"><p
+        style={{
+          padding: 10
+        }}
+      >{label}</p></div>
       <div className="battery">
         <div className="battery-terminal"></div>
         <div className="battery-body">
@@ -94,7 +98,7 @@ const StateMonitor = ({ vehicleId }) => {
       onConnect: () => {
         console.log('Connected to Websocket');
         setConnectionStatus('Connected');
-        
+
         // Subscribe to SOH predictions
         const sohTopic = `/topic/${vehicleTopic}/predict-soh`;
         console.log(`Subscribing to SOH topic: ${sohTopic}`);
@@ -117,7 +121,7 @@ const StateMonitor = ({ vehicleId }) => {
             console.error('Error parsing SOH message:', error);
           }
         });
-      
+
         const predictedSohTopic = `/topic/${vehicleTopic}/predict-soh-future`;
         console.log(`Subscribing to predicted SOH topic: ${predictedSohTopic}`);
         stompClient.subscribe(predictedSohTopic, (response) => {
@@ -125,7 +129,7 @@ const StateMonitor = ({ vehicleId }) => {
             const data = JSON.parse(response.body);
             const predictedSohValue = parseFloat(data.predicted_soh_50_cycles) * 100;
             const now = Date.now();
-            
+
             setPredictedSoh50(predictedSohValue);
 
             setPredictedSohHistory(prev => {
@@ -165,7 +169,7 @@ const StateMonitor = ({ vehicleId }) => {
 
   const sohColor = soh < 80 ? '#e74c3c' :
     soh < 90 ? '#f39c12' : '#3498db';
-    
+
   const predictedSohColor = predictedSoh50 < 70 ? '#e74c3c' :
     predictedSoh50 < 80 ? '#f39c12' : '#3498db';
 
@@ -199,7 +203,7 @@ const StateMonitor = ({ vehicleId }) => {
                 "GOOD - Healthy battery"}
           </div>
         </div>
-        
+
         <div className="status-card">
           <div className="status-label">100-Cycle Prediction:</div>
           <div className="status-value">
