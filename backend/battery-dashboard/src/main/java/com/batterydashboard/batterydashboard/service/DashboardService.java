@@ -1,6 +1,7 @@
 package com.batterydashboard.batterydashboard.service;
 
 import com.batterydashboard.batterydashboard.Flask.FlaskClient;
+import com.batterydashboard.batterydashboard.Flask.models.FuturePredictionRequestBody;
 import com.batterydashboard.batterydashboard.Flask.models.MqttPayloadData;
 import com.batterydashboard.batterydashboard.Flask.models.PredictionRequestBody;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -43,6 +44,14 @@ public class DashboardService {
                 .build();
         ResponseEntity<String> response = flaskClient.getPredictedSoh(predictionRequestBody);
         System.out.println(response.getBody());
+        sendSohFuturePrediction(response.getBody());
         messagingTemplate.convertAndSend("/topic/predict-soh", Objects.requireNonNull(response.getBody()));
+    }
+
+    public void sendSohFuturePrediction(String data) throws JsonProcessingException {
+        FuturePredictionRequestBody futurePredictionRequestBody = objectMapper.readValue(data, FuturePredictionRequestBody.class);
+        ResponseEntity<String> response = flaskClient.getFutureSohPrediction(futurePredictionRequestBody);
+        System.out.println(response.getBody());
+        messagingTemplate.convertAndSend("/topic/predict-soh-future", Objects.requireNonNull(response.getBody()));
     }
 }

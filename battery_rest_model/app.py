@@ -54,10 +54,6 @@ def predict_soh():
     #      })
     return jsonify({"predicted_soh": soh_value})
 
-    # @app.route('/predict-soc', methods=['POST'])
-    # def predict_soc():
-    #    # print(request.get_json())
-    #    return jsonify({"soc":40})
 
 @app.route('/predict-soh-future', methods=['POST'])
 def pred_soh_future():
