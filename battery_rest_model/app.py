@@ -36,10 +36,6 @@ def predict_soh():
     data_scaled = sc.transform(input_data)
     soh_pred = model.predict(data_scaled)
     
-    input_data = np.array([[data[feature] for feature in mapped_payload]])
-    data_scaled = sc.transform(input_data)
-    soh_pred = model.predict(data_scaled)
-    
     soh_value = round(float(soh_pred[0][0]), 4)
 
 
