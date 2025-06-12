@@ -3,9 +3,7 @@ from flask import Flask, request, jsonify
 import numpy as np
 from joblib import load
 from keras.models import load_model
-
 from sklearn.linear_model import LinearRegression
-
 from datetime import datetime
 import pandas as pd
 
@@ -20,7 +18,6 @@ attrib = ['capacity', 'voltage_measured', 'current_measured',
 
 
 # Global log (or use a database/file)
-soh_log = pd.DataFrame(columns=["batteryId", "timestamp", "predicted_soh"])
 
 
 @app.route('/', methods=['GET'])
@@ -38,12 +35,17 @@ def predict_soh():
     input_data = np.array([[data[feature] for feature in mapped_payload]])
     data_scaled = sc.transform(input_data)
     soh_pred = model.predict(data_scaled)
+    
+    input_data = np.array([[data[feature] for feature in mapped_payload]])
+    data_scaled = sc.transform(input_data)
+    soh_pred = model.predict(data_scaled)
+    
     soh_value = round(float(soh_pred[0][0]), 4)
 
 
     # Log the prediction
     soh_log.loc[len(soh_log)] = {
-        "batteryId": data["batteryId"],
+        "batteryId": "B0005",
         "timestamp": datetime.utcnow().isoformat(),
         "predicted_soh": soh_value
     }
@@ -54,13 +56,14 @@ def predict_soh():
     #      })
     return jsonify({"predicted_soh": soh_value})
 
+soh_log = pd.DataFrame(columns=["batteryId", "timestamp", "predicted_soh"])
 
 @app.route('/predict-soh-future', methods=['POST'])
 def pred_soh_future():
     global soh_log
 
     data = request.get_json()
-    battery_id = data["batteryId"]
+    battery_id = "B0005"
     df = soh_log[soh_log["batteryId"] == battery_id]
 
     # Handle insufficient data

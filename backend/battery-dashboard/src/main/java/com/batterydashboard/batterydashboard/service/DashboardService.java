@@ -37,7 +37,7 @@ public class DashboardService {
                 .voltage_measured(mqttPayloadData.getLoadVoltage())
                 .temperature_measured(mqttPayloadData.getTemperature())
                 .current_measured(mqttPayloadData.getCurrent())
-                .capacity(1.8F)
+                .capacity(mqttPayloadData.getCapacity().getEstimatedRemaining())
                 .current_load(mqttPayloadData.getLoadCurrent())
                 .voltage_load(mqttPayloadData.getLoadVoltage())
                 .time(mqttPayloadData.getTime())

@@ -5,7 +5,6 @@ import lombok.Data;
 import java.time.Instant;
 
 @Data
-
 public class MqttPayloadData {
 
     private String batteryId;
@@ -19,6 +18,7 @@ public class MqttPayloadData {
     private String soc; // changed from float to String
     private Capacity capacity;
 
+    @Data
     public static class Capacity {
         private float nominal;
         private float estimatedRemaining;

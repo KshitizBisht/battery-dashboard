@@ -5,6 +5,7 @@ import './BatteryDashboard.css';
 import StateMonitor from '../State/StateMonitor';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import PredictSoh from '../Metrics/Predictsoh';
 
 const BatteryDashboard = () => {
   const [batteryData, setBatteryData] = useState({
@@ -80,6 +81,7 @@ const BatteryDashboard = () => {
           />
         </div>
       </div>
+      <PredictSoh/>
     </div>
   );
 };
