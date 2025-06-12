@@ -68,15 +68,18 @@ const BatteryIcon = ({ percentage, label, color }) => {
   );
 };
 
-const StateMonitor = ({vehicleId}) => {
+const StateMonitor = ({vehicleId, soc}) => {
   const [connectionStatus, setConnectionStatus] = useState('Connecting...');
-  const [stateData, setStateData] = useState({ soh: 0, soc: 0 });
+  const [stateData, setStateData] = useState({ soh: 0, soc: soc || 0 });
   const [sohHistory, setSohHistory] = useState([]);
   const lastStoredTime = useRef(Date.now());
   const clientRef = useRef(null);
-  const socIntervalRef = useRef(null);
+  const vehicleTopic = vehicleId.split('-')[2];
+  console.log("===================" + {soc}.soc)
 
   useEffect(() => {
+    setStateData({ soh: 0, soc: {soc}.soc });
+    setSohHistory([]);
     const socket = new SockJS('http://localhost:8080/ws');
     const stompClient = new Client({
       webSocketFactory: () => socket,
@@ -85,8 +88,9 @@ const StateMonitor = ({vehicleId}) => {
       onConnect: () => {
         console.log('Connected to Websocket');
         setConnectionStatus('Connected');
-        var vehicleTopic = {vehicleId}.vehicleId.split('-')[2]
-        stompClient.subscribe(`/topic/${vehicleTopic}/predict-soh`, (response) => {
+        const sohTopic = `/topic/${vehicleTopic}/predict-soh`;
+        console.log(`Subscribing to SOH topic: ${sohTopic}`);
+        stompClient.subscribe(sohTopic, (response) => {
           try {
             const data = JSON.parse(response.body);
             const sohPercentage = parseFloat(data.predicted_soh) * 100;
@@ -127,7 +131,7 @@ const StateMonitor = ({vehicleId}) => {
         clientRef.current.deactivate();
       }
     };
-  }, []);
+  }, [vehicleId, vehicleTopic]);
 
   useEffect(() => {
     // Start at 100%
@@ -190,18 +194,14 @@ const StateMonitor = ({vehicleId}) => {
 
         <div className="map-section">
           <h3>Travel Range</h3>
-          <MiniMap radius_metres={(stateData.soc / 100) * milesToMetres(BATTERY_FULLCHARGE_RANGE_MILES) } />
+          <MiniMap className = "map" radius_metres={(stateData.soc / 100) * milesToMetres(BATTERY_FULLCHARGE_RANGE_MILES)} />
         </div>
       </div>
   );
 };
 
-function metresToMiles(metres) {
-    return (metres / 1609.34).toFixed(2) ;
-}
-
 function milesToMetres(miles) {
-  return (miles * 1609.34).toFixed(2) ;
+  return (miles * 1609.34).toFixed(2);
 }
 
 export default StateMonitor;

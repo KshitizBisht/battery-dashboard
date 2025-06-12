@@ -30,7 +30,6 @@ const Predictsoh = () => {
         stompClient.subscribe('/topic/B0006/predict-soh-future', (response) => {
           try {
             const data = JSON.parse(response.body);
-            // console.log('Received SOH data:', data);
             setPredictData(prev => ({
               ...prev,
               soh_future: data.predicted_soh_50_cycles,
