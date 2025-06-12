@@ -1,35 +1,51 @@
-/* src/components/Header.css */
+/* DashboardHeader.css */
 .dashboard-header {
-  background: white;
-  padding: 20px 0;
-  border-bottom: 1px solid #eee;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+  padding: 18px 0 0;
+  border-bottom: 1px solid #eef0f5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+  font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 30px 20px;
+  position: relative;
+  z-index: 2;
 }
 
 .header-left h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 26px;
   color: #2c3e50;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ev-highlight {
+  color: #4a6cf7;
+  font-weight: 700;
 }
 
 .subtitle {
-  margin: 5px 0 0;
-  color: #7f8c8d;
-  font-size: 14px;
+  margin: 8px 0 0;
+  color: #6b7c93;
+  font-size: 15px;
+  letter-spacing: 0.3px;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 25px;
 }
 
 .status-indicator {
@@ -38,22 +54,84 @@
   gap: 8px;
   font-size: 14px;
   color: #27ae60;
+  background: rgba(39, 174, 96, 0.08);
+  padding: 6px 12px;
+  border-radius: 20px;
 }
 
 .status-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #7f8c8d;
+  background: #bdc3c7;
 }
 
 .status-dot.active {
   background: #27ae60;
+  box-shadow: 0 0 8px rgba(39, 174, 96, 0.5);
 }
 
 .vehicle-info {
-  background: #f8f9fa;
-  padding: 6px 12px;
-  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  padding: 0 15px;
+  border-left: 1px solid #eef0f5;
+  border-right: 1px solid #eef0f5;
+}
+
+.vehicle-id {
   font-size: 14px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.last-update {
+  font-size: 13px;
+  color: #7f8c8d;
+  margin-top: 3px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4a6cf7 0%, #82a0ff 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.user-role {
+  font-size: 13px;
+  color: #7f8c8d;
+  margin-top: 2px;
+}
+
+.header-decoration {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
 }
