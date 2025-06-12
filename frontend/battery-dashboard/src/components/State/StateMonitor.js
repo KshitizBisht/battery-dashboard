@@ -133,8 +133,7 @@ const StateMonitor = ({vehicleId}) => {
       }
     };
   }, [vehicleId, vehicleTopic]);
-
-
+  
   const socColor = soc < 20 ? '#e74c3c' :
                   soc < 40 ? '#f39c12' : '#2ecc71';
                   
