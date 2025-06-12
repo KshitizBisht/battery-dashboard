@@ -86,7 +86,7 @@ const StateMonitor = () => {
         console.log('Connected to Websocket');
         setConnectionStatus('Connected');
 
-        stompClient.subscribe('/topic/predict-soh', (response) => {
+        stompClient.subscribe('/topic/B0007/predict-soh', (response) => {
           try {
             const data = JSON.parse(response.body);
             const sohPercentage = parseFloat(data.predicted_soh) * 100;

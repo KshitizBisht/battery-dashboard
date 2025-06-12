@@ -27,7 +27,7 @@ const Predictsoh = () => {
         console.log('Connected to Websocket');
         setConnectionStatus('Connected');
 
-        stompClient.subscribe('/topic/predicted_soh_50_cycles', (response) => {
+        stompClient.subscribe('/topic/B0007/predict-soh-future', (response) => {
           try {
             const data = JSON.parse(response.body);
             console.log('Received SOH data:', data);

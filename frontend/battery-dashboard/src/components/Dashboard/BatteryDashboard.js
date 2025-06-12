@@ -29,7 +29,7 @@ const BatteryDashboard = () => {
       },
       onConnect: () => {
         console.log('Connected to Websocket')
-        stompClient.subscribe('/topic/raw-data', (response) => {
+        stompClient.subscribe('/topic/B0007/raw-data', (response) => {
           console.log('Received Message: ', response.body);
           try {
             const data = JSON.parse(response.body);
