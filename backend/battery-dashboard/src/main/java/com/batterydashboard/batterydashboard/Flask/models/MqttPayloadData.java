@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.Instant;
 
 @Data
-public class PredictionPayload {
+public class MqttPayloadData {
 
     private String batteryId;
     private Instant timestamp;

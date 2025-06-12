@@ -1,9 +1,9 @@
 package com.batterydashboard.batterydashboard.Flask;
 
-import com.batterydashboard.batterydashboard.Flask.models.PredictionPayload;
+import com.batterydashboard.batterydashboard.Flask.models.MqttPayloadData;
+import com.batterydashboard.batterydashboard.Flask.models.PredictionRequestBody;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface FlaskClient {
 
     @PostMapping("/predict-soh")
-    public ResponseEntity<String> getPredictedSoh(@RequestBody PredictionPayload predictionPayload);
+    public ResponseEntity<String> getPredictedSoh(@RequestBody PredictionRequestBody predictionRequestBody);
 
     @PostMapping("/predict-soc")
-    public ResponseEntity<String> getPredictedSoc(@RequestBody PredictionPayload predictionPayload);
+    public ResponseEntity<String> getPredictedSoc(@RequestBody MqttPayloadData mqttPayloadData);
 }

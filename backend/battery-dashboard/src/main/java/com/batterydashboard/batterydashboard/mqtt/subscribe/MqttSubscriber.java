@@ -57,7 +57,7 @@ public class MqttSubscriber {
             System.out.println("Headers: " + message.getHeaders());
             dashboardService.sendRawData(payload);
             try {
-                dashboardService.sendSocPrediction(payload);
+//                dashboardService.sendSocPrediction(payload);
                 dashboardService.sendSohPrediction(payload);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);

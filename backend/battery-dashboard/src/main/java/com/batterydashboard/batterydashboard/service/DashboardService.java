@@ -1,7 +1,8 @@
 package com.batterydashboard.batterydashboard.service;
 
 import com.batterydashboard.batterydashboard.Flask.FlaskClient;
-import com.batterydashboard.batterydashboard.Flask.models.PredictionPayload;
+import com.batterydashboard.batterydashboard.Flask.models.MqttPayloadData;
+import com.batterydashboard.batterydashboard.Flask.models.PredictionRequestBody;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -23,15 +24,24 @@ public class DashboardService {
     }
 
     public void sendSocPrediction(String data) throws JsonProcessingException {
-        PredictionPayload requestPayload = objectMapper.readValue(data, PredictionPayload.class);
-        ResponseEntity<String> response = flaskClient.getPredictedSoc(requestPayload);
+        MqttPayloadData mqttPayloadData = objectMapper.readValue(data, MqttPayloadData.class);
+        ResponseEntity<String> response = flaskClient.getPredictedSoc(mqttPayloadData);
         System.out.println(response.getBody());
         messagingTemplate.convertAndSend("/topic/predict-soc", Objects.requireNonNull(response.getBody()));
     }
 
     public void sendSohPrediction(String data) throws JsonProcessingException {
-        PredictionPayload requestPayload = objectMapper.readValue(data, PredictionPayload.class);
-        ResponseEntity<String> response = flaskClient.getPredictedSoh(requestPayload);
+        MqttPayloadData mqttPayloadData = objectMapper.readValue(data, MqttPayloadData.class);
+        PredictionRequestBody predictionRequestBody = PredictionRequestBody.builder()
+                .voltage_measured(mqttPayloadData.getLoadVoltage())
+                .temperature_measured(mqttPayloadData.getTemperature())
+                .current_measured(mqttPayloadData.getCurrent())
+                .capacity(1.8F)
+                .current_load(mqttPayloadData.getLoadCurrent())
+                .voltage_load(mqttPayloadData.getLoadVoltage())
+                .time(mqttPayloadData.getTime())
+                .build();
+        ResponseEntity<String> response = flaskClient.getPredictedSoh(predictionRequestBody);
         System.out.println(response.getBody());
         messagingTemplate.convertAndSend("/topic/predict-soh", Objects.requireNonNull(response.getBody()));
     }

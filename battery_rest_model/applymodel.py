@@ -10,8 +10,8 @@ MQTT_PORT = 1883
 MQTT_TOPIC = "battery/B0006/data"
 
 # Load the pre-trained Keras model
-model = load_model('soh/models/soh_model.keras')
-sc = load('minmax_scaler.joblib')
+model = load_model('../models/soh_model.keras')
+sc = load('../models/scaler1.save')
 
 # Define the attributes expected by the model
 attrib = ['capacity', 'voltage_measured', 'current_measured',
@@ -19,7 +19,7 @@ attrib = ['capacity', 'voltage_measured', 'current_measured',
 
 # Callback when connected to the broker
 def on_connect(client, userdata, flags, rc):
-    client.username_pw_set("IOT", "password")
+    client.username_pw_set("IOT", "")
 
     if rc == 0:
         print("✅ Connected to MQTT broker")
@@ -53,7 +53,7 @@ def on_message(client, userdata, message):
         # data = np.array([[payload[attr] for attr in attrib]])
 
         # Scale the data so the model converges faster
-        data_scaled = sc.fit_transform(data)
+        data_scaled = sc.transform(data)
 
         # Predict SoH
         soh_pred = model.predict(data_scaled)
