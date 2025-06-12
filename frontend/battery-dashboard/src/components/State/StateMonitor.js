@@ -3,6 +3,36 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './StateMonitor.css';
 
+const BatteryIcon = ({ percentage, label, color }) => {
+  return (
+    <div className="battery-container">
+      <div className="battery-label">{label}</div>
+      <div className="battery">
+        {/* Battery terminal */}
+        <div className="battery-terminal"></div>
+        
+        {/* Battery body */}
+        <div className="battery-body">
+          {/* Battery liquid fill with animation */}
+          <div 
+            className="battery-fill"
+            style={{
+              height: `${percentage}%`,
+              backgroundColor: color,
+            }}
+          >
+            {/* Liquid wave effect */}
+            <div className="liquid-wave"></div>
+          </div>
+          
+          {/* Percentage text inside battery */}
+          <div className="battery-percentage">{percentage.toFixed(1)}%</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const StateMonitor = () => {
   const [connectionStatus, setConnectionStatus] = useState('Connecting...');
   const [stateData, setStateData] = useState({
@@ -28,10 +58,13 @@ const StateMonitor = () => {
           try {
             const data = JSON.parse(response.body);
             console.log('Received SOH data:', data);
-             const sohPercentage = parseFloat(data.predicted_soh) * 100;
+            
+            // Convert decimal value to percentage
+            const sohPercentage = parseFloat(data.predicted_soh) * 100;
+            
             setStateData(prev => ({
               ...prev,
-              soh: sohPercentage
+              soh: sohPercentage,
             }));
           } catch (error) {
             console.error('Error parsing SOH message:', error);
@@ -109,56 +142,50 @@ const StateMonitor = () => {
     };
   }, []);
 
-  return (
-    <div className="state-container">
-      
-      <div className="state-card">
-        <div className="state-header">
-          <div className="state-label">State of Charge (SOC)</div>
-          <div className="state-value">
-            {stateData.soc.toFixed(1)}<span className="state-unit">%</span>
-          </div>
-        </div>
-        
-        <div className="progress-bar">
-          <div
-            className="progress-fill"
-            style={{
-              width: `${stateData.soc}%`,
-              backgroundColor: stateData.soc < 20 ? '#e74c3c' : 
-                               stateData.soc < 40 ? '#f39c12' : '#2ecc71'
-            }}
-          ></div>
-        </div>
-        <div className="state-description">
-          {stateData.soc < 20 ? "CRITICAL - Needs charging" :
-           stateData.soc < 40 ? "LOW - Charge soon" : 
-           "NORMAL - Sufficient charge"}
-        </div>
-      </div>
+  // Determine colors based on values
+  const socColor = stateData.soc < 20 ? '#e74c3c' : 
+                  stateData.soc < 40 ? '#f39c12' : '#2ecc71';
+                  
+  const sohColor = stateData.soh < 80 ? '#e74c3c' : 
+                   stateData.soh < 90 ? '#f39c12' : '#3498db';
 
-      <div className="state-card">
-        <div className="state-header">
-          <div className="state-label">State of Health (SOH)</div>
-          <div className="state-value">
-            {stateData.soh.toFixed(1)}<span className="state-unit">%</span>
+  return (
+    <div className="state-monitor">
+      <div className="connection-status">
+        Battery Status: {connectionStatus}
+      </div>
+      
+      <div className="battery-grid">
+        <BatteryIcon 
+          percentage={stateData.soc} 
+          label="State of Charge (SOC)" 
+          color={socColor}
+        />
+        
+        <BatteryIcon 
+          percentage={stateData.soh} 
+          label="State of Health (SOH)" 
+          color={sohColor}
+        />
+      </div>
+      
+      <div className="battery-status">
+        <div className="status-card">
+          <div className="status-label">SOC Status:</div>
+          <div className="status-value">
+            {stateData.soc < 20 ? "CRITICAL - Needs charging" :
+             stateData.soc < 40 ? "LOW - Charge soon" : 
+             "NORMAL - Sufficient charge"}
           </div>
         </div>
         
-        <div className="progress-bar">
-          <div
-            className="progress-fill"
-            style={{
-              width: `${stateData.soh}%`,
-              backgroundColor: stateData.soh < 80 ? '#e74c3c' : 
-                               stateData.soh < 90 ? '#f39c12' : '#2ecc71'
-            }}
-          ></div>
-        </div>
-        <div className="state-description">
-          {stateData.soh < 80 ? "POOR - Consider replacement" :
-           stateData.soh < 90 ? "FAIR - Monitor degradation" : 
-           "GOOD - Healthy battery"}
+        <div className="status-card">
+          <div className="status-label">SOH Status:</div>
+          <div className="status-value">
+            {stateData.soh < 80 ? "POOR - Consider replacement" :
+             stateData.soh < 90 ? "FAIR - Monitor degradation" : 
+             "GOOD - Healthy battery"}
+          </div>
         </div>
       </div>
     </div>

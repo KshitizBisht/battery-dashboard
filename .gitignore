@@ -15,3 +15,4 @@ battery_rest_model/venv/
 # Environment variables
 .env
 
+backend/battery-dashboard/src/main/resources/application.properties
