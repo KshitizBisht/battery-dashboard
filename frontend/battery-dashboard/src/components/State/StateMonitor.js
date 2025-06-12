@@ -2,30 +2,70 @@ import { useState, useEffect, useRef } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './StateMonitor.css';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+const SohChart = ({ data }) => {
+  // Format timestamp to readable time
+  const formatTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  return (
+    <div className="soh-chart">
+      <h3>SOH History (Last 30 Minutes)</h3>
+      <ResponsiveContainer width="100%" height={200}>
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+          <XAxis
+            dataKey="timestamp"
+            tickFormatter={formatTime}
+            minTickGap={20}
+          />
+          <YAxis domain={[80, 100]} />
+          <Tooltip
+            formatter={(value) => [`${value}%`, 'SOH']}
+            labelFormatter={formatTime}
+            contentStyle={{
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              borderRadius: '8px',
+              border: 'none'
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke="#3498db"
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 6, fill: '#2980b9' }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
 
 const BatteryIcon = ({ percentage, label, color }) => {
   return (
     <div className="battery-container">
       <div className="battery-label">{label}</div>
       <div className="battery">
-        {/* Battery terminal */}
         <div className="battery-terminal"></div>
-        
-        {/* Battery body */}
+
+
         <div className="battery-body">
-          {/* Battery liquid fill with animation */}
-          <div 
+
+          <div
             className="battery-fill"
             style={{
               height: `${percentage}%`,
               backgroundColor: color,
             }}
           >
-            {/* Liquid wave effect */}
+
             <div className="liquid-wave"></div>
           </div>
-          
-          {/* Percentage text inside battery */}
+
           <div className="battery-percentage">{percentage.toFixed(1)}%</div>
         </div>
       </div>
@@ -39,11 +79,12 @@ const StateMonitor = () => {
     soh: 0,
     soc: 0,
   });
+  const [sohHistory, setSohHistory] = useState([]);
+  const lastStoredTime = useRef(Date.now());
 
   const clientRef = useRef(null);
   const socIntervalRef = useRef(null);
 
-  // WebSocket connection for SOH
   useEffect(() => {
     const socket = new SockJS('http://localhost:8080/ws');
     const stompClient = new Client({
@@ -53,15 +94,30 @@ const StateMonitor = () => {
       onConnect: () => {
         console.log('Connected to Websocket');
         setConnectionStatus('Connected');
-        
+
         stompClient.subscribe('/topic/predict-soh', (response) => {
           try {
             const data = JSON.parse(response.body);
             console.log('Received SOH data:', data);
-            
-            // Convert decimal value to percentage
             const sohPercentage = parseFloat(data.predicted_soh) * 100;
-            
+            const now = Date.now()
+
+            if (now - lastStoredTime.current > 10000) { 
+              setSohHistory(prev => {
+                const newHistory = [
+                  ...prev,
+                  { timestamp: now, value: sohPercentage }
+                ];
+
+                return newHistory.filter(
+                  point => now - point.timestamp <= 30 * 60 * 1000
+                );
+              });
+
+              lastStoredTime.current = now;
+            }
+
+
             setStateData(prev => ({
               ...prev,
               soh: sohPercentage,
@@ -83,7 +139,7 @@ const StateMonitor = () => {
         setConnectionStatus('Disconnected');
       }
     });
-    
+
     stompClient.activate();
     clientRef.current = stompClient;
 
@@ -94,47 +150,38 @@ const StateMonitor = () => {
     };
   }, []);
 
-  // SOC simulation with random algorithm
   useEffect(() => {
-    // Function to generate realistic SOC values
     const simulateSOC = () => {
       setStateData(prev => {
-        // Simulate different battery behaviors
         const isCharging = Math.random() > 0.7;
         const isDischarging = Math.random() > 0.8;
         const isStable = !isCharging && !isDischarging;
-        
+
         let newSOC = prev.soc;
-        
+
         if (isCharging) {
-          // Charge faster when battery is low, slower when nearly full
           const chargeRate = prev.soc < 20 ? 1.5 : prev.soc < 80 ? 1 : 0.3;
           newSOC = Math.min(100, prev.soc + chargeRate);
-        } 
+        }
         else if (isDischarging) {
-          // Discharge faster under "load"
           const dischargeRate = Math.random() > 0.9 ? 2 : 0.8;
           newSOC = Math.max(0, prev.soc - dischargeRate);
         }
         else if (isStable) {
-          // Minor fluctuations during stable state
           newSOC = prev.soc + (Math.random() * 0.4 - 0.2);
         }
-        
-        // Add some randomness to the simulation
         const fluctuation = Math.random() * 0.3 - 0.15;
         newSOC = Math.max(0, Math.min(100, newSOC + fluctuation));
-        
-        return {...prev, soc: parseFloat(newSOC.toFixed(1))};
+
+        return { ...prev, soc: parseFloat(newSOC.toFixed(1)) };
       });
     };
 
-    // Start simulation
     socIntervalRef.current = setInterval(simulateSOC, 1000);
-    
+
     // Initial value
-    setStateData(prev => ({...prev, soc: 75}));
-    
+    setStateData(prev => ({ ...prev, soc: 75 }));
+
     return () => {
       if (socIntervalRef.current) {
         clearInterval(socIntervalRef.current);
@@ -142,52 +189,52 @@ const StateMonitor = () => {
     };
   }, []);
 
-  // Determine colors based on values
-  const socColor = stateData.soc < 20 ? '#e74c3c' : 
-                  stateData.soc < 40 ? '#f39c12' : '#2ecc71';
-                  
-  const sohColor = stateData.soh < 80 ? '#e74c3c' : 
-                   stateData.soh < 90 ? '#f39c12' : '#3498db';
+  const socColor = stateData.soc < 20 ? '#e74c3c' :
+    stateData.soc < 40 ? '#f39c12' : '#2ecc71';
+
+  const sohColor = stateData.soh < 80 ? '#e74c3c' :
+    stateData.soh < 90 ? '#f39c12' : '#3498db';
 
   return (
     <div className="state-monitor">
       <div className="connection-status">
         Battery Status: {connectionStatus}
       </div>
-      
+
       <div className="battery-grid">
-        <BatteryIcon 
-          percentage={stateData.soc} 
-          label="State of Charge (SOC)" 
+        <BatteryIcon
+          percentage={stateData.soc}
+          label="State of Charge (SOC)"
           color={socColor}
         />
-        
-        <BatteryIcon 
-          percentage={stateData.soh} 
-          label="State of Health (SOH)" 
+
+        <BatteryIcon
+          percentage={stateData.soh}
+          label="State of Health (SOH)"
           color={sohColor}
         />
       </div>
-      
+
       <div className="battery-status">
         <div className="status-card">
           <div className="status-label">SOC Status:</div>
           <div className="status-value">
             {stateData.soc < 20 ? "CRITICAL - Needs charging" :
-             stateData.soc < 40 ? "LOW - Charge soon" : 
-             "NORMAL - Sufficient charge"}
+              stateData.soc < 40 ? "LOW - Charge soon" :
+                "NORMAL - Sufficient charge"}
           </div>
         </div>
-        
+
         <div className="status-card">
           <div className="status-label">SOH Status:</div>
           <div className="status-value">
             {stateData.soh < 80 ? "POOR - Consider replacement" :
-             stateData.soh < 90 ? "FAIR - Monitor degradation" : 
-             "GOOD - Healthy battery"}
+              stateData.soh < 90 ? "FAIR - Monitor degradation" :
+                "GOOD - Healthy battery"}
           </div>
         </div>
       </div>
+      <SohChart data={sohHistory} />
     </div>
   );
 };

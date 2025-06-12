@@ -7,7 +7,7 @@ const DashboardHeader = () => {
       <div className="header-content">
         <div className="header-left">
           <h1>
-            <span className="ev-highlight">EV</span> Battery Monitoring Dashboard
+            <span className="ev-highlight">JLR</span> Battery Monitoring Dashboard
           </h1>
           <p className="subtitle">Real-time performance analytics & health monitoring</p>
         </div>
@@ -17,13 +17,13 @@ const DashboardHeader = () => {
             <span>Connected</span>
           </div>
           <div className="vehicle-info">
-            <span className="vehicle-id">Vehicle ID: EV-2023-001</span>
+            <span className="vehicle-id">Vehicle ID: JLR-EV-001</span>
             <span className="last-update">Last update: Just now</span>
           </div>
           <div className="user-info">
-            <div className="avatar">AD</div>
+            <div className="avatar">TS</div>
             <div className="user-details">
-              <span className="user-name">Ola User</span>
+              <span className="user-name">Tony Stark</span>
               <span className="user-role">Profile - ADMIN</span>
             </div>
           </div>
