@@ -46,7 +46,7 @@ def predict_soh():
     # Log the prediction
     soh_log.loc[len(soh_log)] = {
         "batteryId": "B0005",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now().isoformat(),
         "predicted_soh": soh_value
     }
 

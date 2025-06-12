@@ -54,6 +54,7 @@ const BatteryDashboard = () => {
         stompClient.subscribe(topic, (response) => {
           try {
             const data = JSON.parse(response.body);
+            console.log(data)
             setBatteryData(prev => ({
               ...prev,
               voltage: data.voltage,

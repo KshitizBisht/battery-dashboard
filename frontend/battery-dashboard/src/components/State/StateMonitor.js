@@ -76,7 +76,7 @@ const StateMonitor = ({ vehicleId }) => {
           dischargeRate = 0.35;
         }
 
-        dischargeRate += (Math.random() * 0.2);
+        dischargeRate += (Math.random() * 0.9);
 
         return Math.max(0, prevSoc - dischargeRate);
       });
@@ -105,6 +105,7 @@ const StateMonitor = ({ vehicleId }) => {
         stompClient.subscribe(sohTopic, (response) => {
           try {
             const data = JSON.parse(response.body);
+            console.log(data)
             const sohPercentage = parseFloat(data.predicted_soh) * 100;
             const now = Date.now();
 
