@@ -68,7 +68,7 @@ const BatteryIcon = ({ percentage, label, color }) => {
   );
 };
 
-const StateMonitor = () => {
+const StateMonitor = ({vehicleId}) => {
   const [connectionStatus, setConnectionStatus] = useState('Connecting...');
   const [stateData, setStateData] = useState({ soh: 0, soc: 0 });
   const [sohHistory, setSohHistory] = useState([]);
@@ -85,8 +85,8 @@ const StateMonitor = () => {
       onConnect: () => {
         console.log('Connected to Websocket');
         setConnectionStatus('Connected');
-
-        stompClient.subscribe('/topic/B0007/predict-soh', (response) => {
+        var vehicleTopic = {vehicleId}.vehicleId.split('-')[2]
+        stompClient.subscribe(`/topic/${vehicleTopic}/predict-soh`, (response) => {
           try {
             const data = JSON.parse(response.body);
             const sohPercentage = parseFloat(data.predicted_soh) * 100;
@@ -123,7 +123,7 @@ const StateMonitor = () => {
     clientRef.current = stompClient;
 
     return () => {
-      if (clientRef.current?.connected) {
+      if (clientRef.current && clientRef.current.connected) {
         clientRef.current.deactivate();
       }
     };

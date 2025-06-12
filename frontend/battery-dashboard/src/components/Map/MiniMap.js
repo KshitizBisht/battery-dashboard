@@ -3,7 +3,7 @@ import { Loader } from '@googlemaps/js-api-loader';
 import './MiniMap.css';
 
 const MiniMap = ({ radius_metres = 5000 }) => {
-    console.log("radius: " + radius_metres)
+    // console.log("radius: " + radius_metres)
     const mapRef = useRef(null);
     const [userLocation, setUserLocation] = useState(null);
     const mapInstance = useRef(null);
