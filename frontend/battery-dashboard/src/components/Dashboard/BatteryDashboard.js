@@ -12,6 +12,7 @@ const BatteryDashboard = () => {
     voltage: 0,
     current: 0,
     temperature: 0,
+    soc: 0,
     status: 'Connecting...'
   });
 
@@ -29,6 +30,7 @@ const BatteryDashboard = () => {
       voltage: 0,
       current: 0,
       temperature: 0,
+      soc: 0,
       status: 'Loading...'
     });
     
@@ -50,7 +52,7 @@ const BatteryDashboard = () => {
       onConnect: () => {
         console.log('Connected to Websocket');
         setConnectionStatus('Connected');
-        var vehicleTopic = selectedVehicle.split('-')[2]
+        const vehicleTopic = selectedVehicle.split('-')[2];
         const topic = `/topic/${vehicleTopic}/raw-data`;
         console.log(`Subscribing to topic: ${topic}`);
         
@@ -62,8 +64,10 @@ const BatteryDashboard = () => {
               voltage: data.voltage,
               current: data.current,
               temperature: data.temperature,
+              soc: data.soc,  // Update SOC here
               status: 'Connected'
             }));
+            
           } catch (error) {
             console.error('Error parsing message:', error);
           }
@@ -102,7 +106,7 @@ const BatteryDashboard = () => {
         <span className="connection-status">Status: {connectionStatus}</span>
       </div>
       
-      <StateMonitor vehicleId={selectedVehicle} />
+      <StateMonitor vehicleId={selectedVehicle} soc={batteryData.soc} />
       
       <div className="dashboard-grid">
         <div className="metrics-section">
@@ -113,8 +117,6 @@ const BatteryDashboard = () => {
           />
         </div>
       </div>
-      
-      <PredictSoh vehicleId={selectedVehicle} />
     </div>
   );
 };
