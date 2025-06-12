@@ -130,33 +130,16 @@ const StateMonitor = ({vehicleId}) => {
   }, []);
 
   useEffect(() => {
-    const simulateSOC = () => {
+    // Start at 100%
+    setStateData(prev => ({ ...prev, soc: 100 }));
+
+    // Decrease SOC by 1 every second
+    socIntervalRef.current = setInterval(() => {
       setStateData(prev => {
-        const isCharging = Math.random() > 0.7;
-        const isDischarging = Math.random() > 0.8;
-        const isStable = !isCharging && !isDischarging;
-
-        let newSOC = prev.soc;
-
-        if (isCharging) {
-          const chargeRate = prev.soc < 20 ? 1.5 : prev.soc < 80 ? 1 : 0.3;
-          newSOC = Math.min(100, prev.soc + chargeRate);
-        } else if (isDischarging) {
-          const dischargeRate = Math.random() > 0.9 ? 2 : 0.8;
-          newSOC = Math.max(0, prev.soc - dischargeRate);
-        } else if (isStable) {
-          newSOC = prev.soc + (Math.random() * 0.4 - 0.2);
-        }
-
-        const fluctuation = Math.random() * 0.3 - 0.15;
-        newSOC = Math.max(0, Math.min(100, newSOC + fluctuation));
-
-        return { ...prev, soc: parseFloat(newSOC.toFixed(1)) };
+        const newSOC = Math.max(0, prev.soc - 1);
+        return { ...prev, soc: newSOC };
       });
-    };
-
-    socIntervalRef.current = setInterval(simulateSOC, 1000);
-    setStateData(prev => ({ ...prev, soc: 75 }));
+    }, 1000);
 
     return () => {
       if (socIntervalRef.current) {
@@ -164,6 +147,7 @@ const StateMonitor = ({vehicleId}) => {
       }
     };
   }, []);
+
 
   const socColor = stateData.soc < 20 ? '#e74c3c' :
       stateData.soc < 40 ? '#f39c12' : '#2ecc71';
@@ -205,7 +189,7 @@ const StateMonitor = ({vehicleId}) => {
         <SohChart data={sohHistory} />
 
         <div className="map-section">
-          <h3>Coverage Radius Based on SOC</h3>
+          <h3>Travel Range</h3>
           <MiniMap radius_metres={(stateData.soc / 100) * milesToMetres(BATTERY_FULLCHARGE_RANGE_MILES) } />
         </div>
       </div>
