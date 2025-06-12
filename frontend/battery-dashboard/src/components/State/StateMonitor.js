@@ -3,84 +3,84 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './StateMonitor.css';
 import MiniMap from "../Map/MiniMap";
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
-} from 'recharts';
 
-const BATTERY_FULLCHARGE_RANGE_MILES = 300
-
-const SohChart = ({ data }) => {
-  const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  return (
-      <div className="soh-chart">
-        <h3>SOH History (Last 30 Minutes)</h3>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-            <XAxis dataKey="timestamp" tickFormatter={formatTime} minTickGap={20} />
-            <YAxis domain={[80, 100]} />
-            <Tooltip
-                formatter={(value) => [`${value}%`, 'SOH']}
-                labelFormatter={formatTime}
-                contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: '8px',
-                  border: 'none'
-                }}
-            />
-            <Line
-                type="monotone"
-                dataKey="value"
-                stroke="#3498db"
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 6, fill: '#2980b9' }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-  );
-};
+const BATTERY_FULLCHARGE_RANGE_MILES = 300;
 
 const BatteryIcon = ({ percentage, label, color }) => {
+  const percentageValue = typeof percentage === 'number' ? percentage : 0;
+  
   return (
-      <div className="battery-container">
-        <div className="battery-label">{label}</div>
-        <div className="battery">
-          <div className="battery-terminal"></div>
-          <div className="battery-body">
-            <div
-                className="battery-fill"
-                style={{
-                  height: `${percentage}%`,
-                  backgroundColor: color,
-                }}
-            >
-              <div className="liquid-wave"></div>
-            </div>
-            <div className="battery-percentage">{percentage.toFixed(1)}%</div>
+    <div className="battery-container">
+      <div className="battery-label">{label}</div>
+      <div className="battery">
+        <div className="battery-terminal"></div>
+        <div className="battery-body">
+          <div
+            className="battery-fill"
+            style={{
+              height: `${percentageValue}%`,
+              backgroundColor: color,
+            }}
+          >
+            <div className="liquid-wave"></div>
           </div>
+          <div className="battery-percentage">{percentageValue.toFixed(1)}%</div>
         </div>
       </div>
+    </div>
   );
 };
 
-const StateMonitor = ({vehicleId, soc}) => {
+const StateMonitor = ({vehicleId}) => {
   const [connectionStatus, setConnectionStatus] = useState('Connecting...');
-  const [stateData, setStateData] = useState({ soh: 0, soc: soc || 0 });
+  const [soh, setSoh] = useState(0);  
+  const [soc, setSoc] = useState(100);  
   const [sohHistory, setSohHistory] = useState([]);
   const lastStoredTime = useRef(Date.now());
   const clientRef = useRef(null);
-  const vehicleTopic = vehicleId.split('-')[2];
-  console.log("===================" + {soc}.soc)
   const socIntervalRef = useRef(null);
+  const vehicleTopic = vehicleId.split('-')[2];
 
   useEffect(() => {
-    setStateData({ soh: 0, soc: {soc}.soc });
+    setSoc(100);
+    setSoh(0);
     setSohHistory([]);
+    
+    // Clear any existing SOC simulation
+    if (socIntervalRef.current) {
+      clearInterval(socIntervalRef.current);
+    }
+    
+    // Start new simulation
+    socIntervalRef.current = setInterval(() => {
+      setSoc(prevSoc => {
+        const drivingCondition = Math.random();
+        let dischargeRate = 0.3; 
+        
+        if (drivingCondition < 0.2) {
+          dischargeRate = 0.7;
+        } else if (drivingCondition < 0.4) {
+          dischargeRate = 0.5;
+        } else if (drivingCondition < 0.6) {
+          dischargeRate = 0.4;
+        } else if (drivingCondition < 0.8) {
+          dischargeRate = 0.35;
+        }
+        
+        dischargeRate += (Math.random() * 0.1 - 0.05);
+
+        return Math.max(0, prevSoc - dischargeRate);
+      });
+    }, 1000);
+    
+    return () => {
+      if (socIntervalRef.current) {
+        clearInterval(socIntervalRef.current);
+      }
+    };
+  }, [vehicleId]);
+
+  useEffect(() => {
     const socket = new SockJS('http://localhost:8080/ws');
     const stompClient = new Client({
       webSocketFactory: () => socket,
@@ -105,7 +105,7 @@ const StateMonitor = ({vehicleId, soc}) => {
               lastStoredTime.current = now;
             }
 
-            setStateData(prev => ({ ...prev, soh: sohPercentage }));
+            setSoh(sohPercentage);
           } catch (error) {
             console.error('Error parsing SOH message:', error);
           }
@@ -134,70 +134,49 @@ const StateMonitor = ({vehicleId, soc}) => {
     };
   }, [vehicleId, vehicleTopic]);
 
-  useEffect(() => {
-    // Start at 100%
-    setStateData(prev => ({ ...prev, soc: 100 }));
 
-    // Decrease SOC by 1 every second
-    socIntervalRef.current = setInterval(() => {
-      setStateData(prev => {
-        const newSOC = Math.max(0, prev.soc - 1);
-        return { ...prev, soc: newSOC };
-      });
-    }, 1000);
-
-    return () => {
-      if (socIntervalRef.current) {
-        clearInterval(socIntervalRef.current);
-      }
-    };
-  }, []);
-
-
-  const socColor = stateData.soc < 20 ? '#e74c3c' :
-      stateData.soc < 40 ? '#f39c12' : '#2ecc71';
-
-  const sohColor = stateData.soh < 80 ? '#e74c3c' :
-      stateData.soh < 90 ? '#f39c12' : '#3498db';
+  const socColor = soc < 20 ? '#e74c3c' :
+                  soc < 40 ? '#f39c12' : '#2ecc71';
+                  
+  const sohColor = soh < 80 ? '#e74c3c' : 
+                   soh < 90 ? '#f39c12' : '#3498db';
 
   return (
-      <div className="state-monitor">
-        <div className="connection-status">
-          Battery Status: {connectionStatus}
-        </div>
+    <div className="state-monitor">
+      <div className="connection-status">
+        Battery Status: {connectionStatus}
+      </div>
 
-        <div className="battery-grid">
-          <BatteryIcon percentage={stateData.soc} label="State of Charge (SOC)" color={socColor} />
-          <BatteryIcon percentage={stateData.soh} label="State of Health (SOH)" color={sohColor} />
-        </div>
+      <div className="battery-grid">
+        <BatteryIcon percentage={soc} label="State of Charge (SOC)" color={socColor} />
+        <BatteryIcon percentage={soh} label="State of Health (SOH)" color={sohColor} />
+      </div>
 
-        <div className="battery-status">
-          <div className="status-card">
-            <div className="status-label">SOC Status:</div>
-            <div className="status-value">
-              {stateData.soc < 20 ? "CRITICAL - Needs charging" :
-                  stateData.soc < 40 ? "LOW - Charge soon" :
-                      "NORMAL - Sufficient charge"}
-            </div>
-          </div>
-
-          <div className="status-card">
-            <div className="status-label">SOH Status:</div>
-            <div className="status-value">
-              {stateData.soh < 80 ? "POOR - Consider replacement" :
-                  stateData.soh < 90 ? "FAIR - Monitor degradation" :
-                      "GOOD - Healthy battery"}
-            </div>
+      <div className="battery-status">
+        <div className="status-card">
+          <div className="status-label">SOC Status:</div>
+          <div className="status-value">
+            {soc < 20 ? "CRITICAL - Needs charging" :
+             soc < 40 ? "LOW - Charge soon" : 
+             "NORMAL - Sufficient charge"}
           </div>
         </div>
 
-        <SohChart data={sohHistory} />
-
-        <div className="map-section">
-          <h3>Travel Range</h3>
-          <MiniMap className = "map" radius_metres={(stateData.soc / 100) * milesToMetres(BATTERY_FULLCHARGE_RANGE_MILES)} />
+        <div className="status-card">
+          <div className="status-label">SOH Status:</div>
+          <div className="status-value">
+            {soh < 80 ? "POOR - Consider replacement" :
+             soh < 90 ? "FAIR - Monitor degradation" : 
+             "GOOD - Healthy battery"}
+          </div>
         </div>
       </div>
+
+      <div className="map-section">
+        <h3>Travel Range</h3>
+        <MiniMap className="map" radius_metres={(soc / 100) * milesToMetres(BATTERY_FULLCHARGE_RANGE_MILES)} />
+      </div>
+    </div>
   );
 };
 
