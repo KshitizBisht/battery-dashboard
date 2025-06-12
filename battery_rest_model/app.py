@@ -4,6 +4,12 @@ import numpy as np
 from joblib import load
 from keras.models import load_model
 
+from sklearn.linear_model import LinearRegression
+
+from datetime import datetime
+import pandas as pd
+
+
 app = Flask(__name__)
 
 model = load_model('../models/soh_model.keras')
@@ -12,28 +18,92 @@ sc = load('../models/scaler1.save')
 attrib = ['capacity', 'voltage_measured', 'current_measured',
           'temperature_measured', 'current_load', 'voltage_load', 'time']
 
+
+# Global log (or use a database/file)
+soh_log = pd.DataFrame(columns=["batteryId", "timestamp", "predicted_soh"])
+
+
 @app.route('/', methods=['GET'])
 def hello_world():
    return 'Hello World'
 
 @app.route('/predict-soh', methods=['POST'])
 def predict_soh():
-   data = request.get_json()
-   mapped_payload = ['capacity','voltage_measured','current_measured','temperature_measured',
+    global soh_log
+    data = request.get_json()
+    mapped_payload = ['capacity','voltage_measured','current_measured','temperature_measured',
                     'current_load','voltage_load','time']
-   input_data = np.array([[data[feature] for feature in mapped_payload]])
-   data_scaled = sc.transform(input_data)
-   soh_pred = model.predict(data_scaled)
-   print(f"Predicted SoH: {soh_pred[0][0]:.4f}")
-   prediction_payload = json.dumps({
-            "predicted_soh": round(float(soh_pred[0][0]), 4)
-        })
-   return prediction_payload
 
-# @app.route('/predict-soc', methods=['POST'])
-# def predict_soc():
-#    # print(request.get_json())
-#    return jsonify({"soc":40})
+    # Prepare input for model
+    input_data = np.array([[data[feature] for feature in mapped_payload]])
+    data_scaled = sc.transform(input_data)
+    soh_pred = model.predict(data_scaled)
+    soh_value = round(float(soh_pred[0][0]), 4)
+
+
+    # Log the prediction
+    soh_log.loc[len(soh_log)] = {
+        "batteryId": data["batteryId"],
+        "timestamp": datetime.utcnow().isoformat(),
+        "predicted_soh": soh_value
+    }
+
+    print(f"Predicted SoH: {soh_value}")
+    # prediction_payload = json.dumps({
+    #          "predicted_soh": round(float(soh_pred[0][0]), 4)
+    #      })
+    return jsonify({"predicted_soh": soh_value})
+
+    # @app.route('/predict-soc', methods=['POST'])
+    # def predict_soc():
+    #    # print(request.get_json())
+    #    return jsonify({"soc":40})
+
+@app.route('/predict-soh-future', methods=['POST'])
+def pred_soh_future():
+    global soh_log
+
+    data = request.get_json()
+    battery_id = data["batteryId"]
+    df = soh_log[soh_log["batteryId"] == battery_id]
+
+    # Handle insufficient data
+    if len(df) == 0:
+        return jsonify({
+            "batteryId": battery_id,
+            "current_soh": "pending",
+            "predicted_soh_50_cycles": "pending"
+        }), 200
+    elif len(df) == 1:
+        return jsonify({
+            "batteryId": battery_id,
+            "current_soh": float(df["predicted_soh"].iloc[-1]),
+            "predicted_soh_50_cycles": "pending"
+        }), 200
+
+    # # Estimate degradation rate
+    # recent_soh = df["predicted_soh"].values[-1]
+    # previous_soh = df["predicted_soh"].values[-2]
+    # degradation_rate = (previous_soh - recent_soh) / 1  # per cycle
+
+    # Sort by timestamp to ensure correct order
+    df_sorted = df.sort_values(by="timestamp")
+
+    # Linear regression to estimate degradation rate
+    X = np.arange(len(df_sorted)).reshape(-1, 1) # Cycle index
+    y = df_sorted["predicted_soh"].values
+    reg = LinearRegression()
+    reg.fit(X, y)
+
+    degradation_rate = -reg.coef_[0] # Negative slope
+    current_soh = y[-1]
+    future_soh = current_soh - (degradation_rate * 50)
+
+    return jsonify({
+        # "batteryId": battery_id,
+        # "current_soh": recent_soh,
+        "predicted_soh_50_cycles": round(future_soh, 4)
+    })
 
 if __name__ == '__main__':
-   app.run()
+    app.run()
