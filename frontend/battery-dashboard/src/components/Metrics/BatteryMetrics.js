@@ -1,5 +1,4 @@
-import React from 'react';
-import './Metrics.css';
+import './BatteryMetrics.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBolt, faThermometerHalf, faChargingStation } from '@fortawesome/free-solid-svg-icons';
 

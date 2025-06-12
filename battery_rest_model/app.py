@@ -96,7 +96,10 @@ def pred_soh_future():
 
     degradation_rate = -reg.coef_[0] # Negative slope
     current_soh = y[-1]
-    future_soh = current_soh - (degradation_rate * 50)
+    if degradation_rate < 0:
+        future_soh = current_soh + (degradation_rate * 100)
+    else:
+        future_soh = current_soh
 
     return jsonify({
         # "batteryId": battery_id,

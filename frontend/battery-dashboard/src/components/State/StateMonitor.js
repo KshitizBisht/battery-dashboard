@@ -3,6 +3,9 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './StateMonitor.css';
 import MiniMap from "../Map/MiniMap";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts';
 
 const BATTERY_FULLCHARGE_RANGE_MILES = 300;
 
@@ -11,7 +14,7 @@ const BatteryIcon = ({ percentage, label, color }) => {
 
   return (
     <div className="battery-container">
-      <div className="battery-label">{label}</div>
+      <div className="battery-label"><p>{label}</p></div>
       <div className="battery">
         <div className="battery-terminal"></div>
         <div className="battery-body">
@@ -34,8 +37,10 @@ const BatteryIcon = ({ percentage, label, color }) => {
 const StateMonitor = ({ vehicleId }) => {
   const [connectionStatus, setConnectionStatus] = useState('Connecting...');
   const [soh, setSoh] = useState(0);
+  const [predictedSoh50, setPredictedSoh50] = useState(0);
   const [soc, setSoc] = useState(100);
   const [sohHistory, setSohHistory] = useState([]);
+  const [predictedSohHistory, setPredictedSohHistory] = useState([]);
   const lastStoredTime = useRef(Date.now());
   const clientRef = useRef(null);
   const socIntervalRef = useRef(null);
@@ -44,7 +49,9 @@ const StateMonitor = ({ vehicleId }) => {
   useEffect(() => {
     setSoc(100);
     setSoh(0);
+    setPredictedSoh50(0);
     setSohHistory([]);
+    setPredictedSohHistory([]);
 
     if (socIntervalRef.current) {
       clearInterval(socIntervalRef.current);
@@ -87,6 +94,8 @@ const StateMonitor = ({ vehicleId }) => {
       onConnect: () => {
         console.log('Connected to Websocket');
         setConnectionStatus('Connected');
+        
+        // Subscribe to SOH predictions
         const sohTopic = `/topic/${vehicleTopic}/predict-soh`;
         console.log(`Subscribing to SOH topic: ${sohTopic}`);
         stompClient.subscribe(sohTopic, (response) => {
@@ -106,6 +115,25 @@ const StateMonitor = ({ vehicleId }) => {
             setSoh(sohPercentage);
           } catch (error) {
             console.error('Error parsing SOH message:', error);
+          }
+        });
+      
+        const predictedSohTopic = `/topic/${vehicleTopic}/predict-soh-future`;
+        console.log(`Subscribing to predicted SOH topic: ${predictedSohTopic}`);
+        stompClient.subscribe(predictedSohTopic, (response) => {
+          try {
+            const data = JSON.parse(response.body);
+            const predictedSohValue = parseFloat(data.predicted_soh_50_cycles) * 100;
+            const now = Date.now();
+            
+            setPredictedSoh50(predictedSohValue);
+
+            setPredictedSohHistory(prev => {
+              const newHistory = [...prev, { timestamp: now, value: predictedSohValue }];
+              return newHistory.filter(point => now - point.timestamp <= 30 * 60 * 1000);
+            });
+          } catch (error) {
+            console.error('Error parsing predicted SOH message:', error);
           }
         });
       },
@@ -137,6 +165,9 @@ const StateMonitor = ({ vehicleId }) => {
 
   const sohColor = soh < 80 ? '#e74c3c' :
     soh < 90 ? '#f39c12' : '#3498db';
+    
+  const predictedSohColor = predictedSoh50 < 70 ? '#e74c3c' :
+    predictedSoh50 < 80 ? '#f39c12' : '#3498db';
 
   return (
     <div className="state-monitor">
@@ -147,6 +178,7 @@ const StateMonitor = ({ vehicleId }) => {
       <div className="battery-grid">
         <BatteryIcon percentage={soc} label="State of Charge (SOC)" color={socColor} />
         <BatteryIcon percentage={soh} label="State of Health (SOH)" color={sohColor} />
+        <BatteryIcon percentage={predictedSoh50} label="Predicted SOH (100 cycles)" color={predictedSohColor} />
       </div>
 
       <div className="battery-status">
@@ -165,6 +197,15 @@ const StateMonitor = ({ vehicleId }) => {
             {soh < 80 ? "POOR - Consider replacement" :
               soh < 90 ? "FAIR - Monitor degradation" :
                 "GOOD - Healthy battery"}
+          </div>
+        </div>
+        
+        <div className="status-card">
+          <div className="status-label">100-Cycle Prediction:</div>
+          <div className="status-value">
+            {predictedSoh50 < 70 ? "POOR - Significant degradation expected" :
+              predictedSoh50 < 80 ? "FAIR - Moderate degradation expected" :
+                "GOOD - Minimal degradation expected"}
           </div>
         </div>
       </div>
