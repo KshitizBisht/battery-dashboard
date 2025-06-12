@@ -20,15 +20,17 @@ public class DashboardService {
     private final FlaskClient flaskClient;
     private final ObjectMapper objectMapper;
 
-    public void sendRawData(String data) {
-        messagingTemplate.convertAndSend("/topic/raw-data", data);
+    public void sendRawData(String data) throws JsonProcessingException {
+        MqttPayloadData mqttPayloadData = objectMapper.readValue(data, MqttPayloadData.class);
+        System.out.println("/topic" + mqttPayloadData.getBatteryId() + "/raw-data");
+        messagingTemplate.convertAndSend("/topic/" + mqttPayloadData.getBatteryId() + "/raw-data", data);
     }
 
     public void sendSocPrediction(String data) throws JsonProcessingException {
         MqttPayloadData mqttPayloadData = objectMapper.readValue(data, MqttPayloadData.class);
         ResponseEntity<String> response = flaskClient.getPredictedSoc(mqttPayloadData);
         System.out.println(response.getBody());
-        messagingTemplate.convertAndSend("/topic/predict-soc", Objects.requireNonNull(response.getBody()));
+        messagingTemplate.convertAndSend("/topic/" + mqttPayloadData.getBatteryId() + "/predict-soc", Objects.requireNonNull(response.getBody()));
     }
 
     public void sendSohPrediction(String data) throws JsonProcessingException {
@@ -44,14 +46,14 @@ public class DashboardService {
                 .build();
         ResponseEntity<String> response = flaskClient.getPredictedSoh(predictionRequestBody);
         System.out.println(response.getBody());
-        sendSohFuturePrediction(response.getBody());
-        messagingTemplate.convertAndSend("/topic/predict-soh", Objects.requireNonNull(response.getBody()));
+        sendSohFuturePrediction(response.getBody(), mqttPayloadData.getBatteryId());
+        messagingTemplate.convertAndSend("/topic/" + mqttPayloadData.getBatteryId() + "/predict-soh", Objects.requireNonNull(response.getBody()));
     }
 
-    public void sendSohFuturePrediction(String data) throws JsonProcessingException {
+    public void sendSohFuturePrediction(String data, String batteryId) throws JsonProcessingException {
         FuturePredictionRequestBody futurePredictionRequestBody = objectMapper.readValue(data, FuturePredictionRequestBody.class);
         ResponseEntity<String> response = flaskClient.getFutureSohPrediction(futurePredictionRequestBody);
         System.out.println(response.getBody());
-        messagingTemplate.convertAndSend("/topic/predict-soh-future", Objects.requireNonNull(response.getBody()));
+        messagingTemplate.convertAndSend("/topic/" + batteryId + "/predict-soh-future", Objects.requireNonNull(response.getBody()));
     }
 }

@@ -41,6 +41,7 @@ public class MqttSubscriber {
         adapter.setQos(1);
         adapter.setOutputChannel(mqttInputChannel());
         adapter.addTopic("battery/B0006/data");
+        adapter.addTopic("battery/B0007/data");
         return adapter;
     }
 
@@ -55,9 +56,8 @@ public class MqttSubscriber {
             System.out.println("Topic: " + topic);
             System.out.println("Payload: " + payload);
             System.out.println("Headers: " + message.getHeaders());
-            dashboardService.sendRawData(payload);
             try {
-//                dashboardService.sendSocPrediction(payload);
+                dashboardService.sendRawData(payload);
                 dashboardService.sendSohPrediction(payload);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);

@@ -16,3 +16,4 @@ battery_rest_model/venv/
 .env
 
 backend/battery-dashboard/src/main/resources/application.properties
+frontend/config.env
