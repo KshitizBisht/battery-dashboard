@@ -135,16 +135,25 @@ const StateMonitor = ({vehicleId, soc}) => {
   }, [vehicleId, vehicleTopic]);
 
   useEffect(() => {
-    // Start at 100%
+    let direction = -1; // -1 for discharging, 1 for charging
+
     setStateData(prev => ({ ...prev, soc: 100 }));
 
-    // Decrease SOC by 1 every second
     socIntervalRef.current = setInterval(() => {
       setStateData(prev => {
-        const newSOC = Math.max(0, prev.soc - 1);
+        let newSOC = prev.soc + direction;
+
+        if (newSOC <= 0) {
+          newSOC = 0;
+          direction = 1; // switch to charging
+        } else if (newSOC >= 100) {
+          newSOC = 100;
+          direction = -1; // switch to discharging
+        }
+
         return { ...prev, soc: newSOC };
       });
-    }, 1000);
+    }, 500);
 
     return () => {
       if (socIntervalRef.current) {
@@ -152,6 +161,7 @@ const StateMonitor = ({vehicleId, soc}) => {
       }
     };
   }, []);
+
 
 
   const socColor = stateData.soc < 20 ? '#e74c3c' :
