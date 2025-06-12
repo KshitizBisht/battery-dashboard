@@ -76,6 +76,7 @@ const StateMonitor = ({vehicleId, soc}) => {
   const clientRef = useRef(null);
   const vehicleTopic = vehicleId.split('-')[2];
   console.log("===================" + {soc}.soc)
+  const socIntervalRef = useRef(null);
 
   useEffect(() => {
     setStateData({ soh: 0, soc: {soc}.soc });
