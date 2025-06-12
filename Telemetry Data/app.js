@@ -3,7 +3,6 @@ const path = require('path');
 const readline = require('readline');
 const mqtt = require('mqtt');
 
-// MQTT Setup
 const brokerUrl = '';
 const mqttOptions = {
     username: '',
@@ -17,7 +16,7 @@ client.on('error', (err) => console.error('❌ MQTT connection error:', err));
 const DATA_DIR = path.join(__dirname, './cleaned_dataset/data');
 const METADATA_PATH = path.join(__dirname, './cleaned_dataset/metadata.csv');
 const TARGET_BATTERY_IDS = ['B0005', 'B0006', 'B0007'];
-const NOMINAL_CAPACITY = 2.6; // Ah (for 18650 cell)
+const NOMINAL_CAPACITY = 1.85; // Ah (for 18650 cell)
 
 const batteryFiles = {};
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -117,7 +116,7 @@ async function publishTelemetry() {
                     }
                 });
 
-                const wait = Math.max(0, (time - previousTime) * 100);
+                const wait = Math.max(0, (time - previousTime) * 1000);
                 previousTime = time;
                 await delay(wait);
             }
