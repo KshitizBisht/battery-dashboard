@@ -11,8 +11,6 @@ const BatteryDashboard = () => {
     voltage: 0,
     current: 0,
     temperature: 0,
-    soc: 0,
-    soh: 0,
     status: 'Connecting...'
   });
 
@@ -39,9 +37,7 @@ const BatteryDashboard = () => {
               ...prev,
               voltage: data.voltage,
               current: data.current,
-              temperature: data.temperature,
-              soc: data.soc || prev.soc,
-              soh: data.soh || prev.soh
+              temperature: data.temperature
             }));
           } catch (error) {
             console.error('Error parsing message:', error);
@@ -77,10 +73,7 @@ const BatteryDashboard = () => {
       </div>
 
       <DashboardHeader />
-      <StateMonitor
-        soc={batteryData.soc}
-        soh={batteryData.soh}
-      />
+      <StateMonitor/>
       <div className="dashboard-grid">
         <div className="metrics-section">
           <BatteryMetrics
